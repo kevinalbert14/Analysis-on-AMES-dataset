@@ -1,0 +1,375 @@
+---
+title: "AMES DATASET"
+date: "27/07/2021"
+output: html_document
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(officer)
+library(tidyverse)
+library(dplyr)
+library(modeldata)
+data(ames, package="modeldata")
+model_1 <- lm(Sale_Price ~ Gr_Liv_Area, data = ames )
+model_2 <- lm(Sale_Price ~ First_Flr_SF, data = ames )
+
+model_3 <- lm(Sale_Price ~Total_Bsmt_SF, data = ames )
+
+m1_aug <- broom :: augment(model_1)
+
+
+response_plot <- ggplot(data = ames) + geom_histogram(mapping = aes(x = Sale_Price), fill = "lavender",colour = "black") + 
+  labs(x = "Sales price of the houses", y = "Number of houses", title ="Distribution of the response variable - Sales Price")
+
+
+ trans_plot <- ggplot(data = ames) + geom_histogram(mapping = aes(x = Sale_Price), fill = "lavender",colour ="black") + scale_x_log10()+
+  labs(x = "House price on a logarithmic scale", y = "Count of houses", title ="Distribution of logarithm of sales price across different houses")
+ 
+ response_variable_outliers <- ggplot(data = ames) + geom_boxplot(aes(x = Sale_Price)) + 
+  labs(x = "Hpuse prices", title ="Visualizing sale price for detecting exceptional values")
+ 
+ models <- list(model_1, model_2, model_3)
+model_summary1 <- modelsummary(models)
+model_summary1
+
+
+
+pres <- read_pptx()
+pres <- add_slide(pres, layout = "Title Only", master = "Office Theme")
+
+# add Title text
+# Step 1: EDA
+pres <- ph_with(pres, 
+                value = "Data Product for Ames Housing Data", 
+                location = ph_location_type(type = "title"))
+pres <- add_slide(pres,
+                  layout = "Title and Content",
+                  master = "Office Theme")
+pres <- ph_with(pres,
+                value = "Table of Contents",
+                location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c('Exploratory Data Analysis','Finding Response Variable','Data Modelling','Model Assessment','Model Diagnostics','Model Transformation'), location = ph_location_type(type = "body"))
+pres <- add_slide(pres,
+                  layout = "Title and Content",
+                  master = "Office Theme")
+pres <- ph_with(pres,
+                value = "Performing Exploratory Data Analysis",
+                location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("The First step in our work was to perform Exploratory Data Analysis for the Ames Housing Dataset to explore variables","We performed Univariate Analysis for all Variables in our Dataset","Bivariate and Multivariate for Numerical Variables with high correlation"), location = ph_location_type(type = "body"))
+
+
+# Step 2: Determine the Response Variable in your dataset
+# Slide 1
+#pres <- add_slide(pres, layout = "Title Only", master = "Office Theme")
+#pres <- ph_with(pres, 
+                #value = "Ames Data product", 
+                #location = ph_location_type(type = "title"))
+
+# Slide 2
+pres <- add_slide(pres,
+                  layout = "Title and Content",
+                  master = "Office Theme")
+pres <- ph_with(pres,
+                value = "STEP-2 CHOOSING THE RESPONSE VARIABLE",
+                location = ph_location_type(type = "title"))
+
+
+properties <- fp_text(color = "black", font.size = 24, bold = FALSE)
+
+slide_body <- ftext(paste0("For our ames housing data, the response variable is going to be the sales price of the house. Further down the analysis, we'd look at the top three factors that impact the house price the most. As of now, the fist and the most important thing to look at is the distribution of our response variable"), properties)
+
+pres <- ph_with(pres, value = fpar(slide_body),
+                 location = ph_location_left())
+
+
+pres <- ph_with(pres, value = response_plot,
+               location = ph_location_right())
+
+# Slide 3
+pres <- add_slide(pres,
+                  layout = "Title and Content",
+                  master = "Office Theme")
+pres <- ph_with(pres,
+                value = "Interpretition about Response Variable",
+                location = ph_location_type(type = "title"))
+
+
+
+properties1 <- fp_text(color = "black", font.size = 20, bold = FALSE)
+
+slide_body1 <- ftext(paste0("Discerning the histogram above, it can be said that the sales prices of the houses are not symmetrically distributed. The long tail towards the right gives an impression of right skewness and there is one clear peak around $1,27,967 indicating that most of the houses have a price around this value. However there are very few houses that are exceptionally expensive as compared to the majority of the properties which justifies the right skewness in the plot.
+
+Based on the observation based above, we would have to transform our variable in a way that it's distribution changes from the one already to symmetric.We are going to perform logarithmic transformation on our response variable Sales Price, it won't make any sense to take squared values as house prices are already in thousands of dollars, squaring them would turn into millions."), properties1)
+
+pres <- ph_with(pres, value = fpar(slide_body1),
+                 location = ph_location_type(type = "body"))
+
+
+
+# Slide 4
+pres <- add_slide(pres,
+                  layout = "Title and Content",
+                  master = "Office Theme")
+pres <- ph_with(pres,
+                value = "Distribution of logarithm of sales price across different houses",
+                location = ph_location_type(type = "title"))
+
+properties2 <- fp_text(color = "black", font.size = 18, bold = FALSE)
+
+
+slide_body2 <- ftext(paste0("There is a significant shift in the distribution of our house prices after taking logarithmic transformation. The Sales price on a logarithmic scale seem to be symmetrically distributed, unaffected by outliers. Non-transformed Sales price had a long tail towards the right depicting presence of exceptionally expensive houses in our dataset. It is helful to view the transformed Sales price distributed normally.
+From the histogram plotted above, it is pretty evident that our dataset do have outliers but which houses have prices incomparable to others, we want to look for that."), properties2)
+
+pres <- ph_with(pres, value = fpar(slide_body2),
+                 location = ph_location_left())
+
+
+pres <- ph_with(pres, value = trans_plot,
+               location = ph_location_right())
+
+
+
+# Slide 5
+pres <- add_slide(pres,
+                  layout = "Title and Content",
+                  master = "Office Theme")
+pres <- ph_with(pres,
+                value = "Visualizing sale price for detecting exceptional values",
+                location = ph_location_type(type = "title"))
+
+properties3 <- fp_text(color = "black", font.size = 22, bold = FALSE)
+
+
+slide_body3 <- ftext(paste0("The outliers are being verified using a boxplot. All the points represented beyond the upper whisker prove that those are the ouliers.All these points represent the properties for which sales rate is exceptionally high in comparison to the rest of the houses.
+Considering the 3rd quartile + 1.5 * IQR rule, all the points beyond $339500 are the outliers in our data."), properties3)
+
+pres <- ph_with(pres, value = fpar(slide_body3),
+                 location = ph_location_left())
+
+
+pres <- ph_with(pres, value = response_variable_outliers,
+               location = ph_location_right())
+
+
+# Step 3: Modeling
+
+pres <- add_slide(pres,
+                  layout = "Title and Content",
+                  master = "Office Theme")
+pres <- ph_with(pres, value = "Data Modelling", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = "A footer", location = ph_location_type(type = "ftr"))
+pres <- ph_with(pres, value = format(Sys.Date()), location = ph_location_type(type = "dt"))
+pres <- ph_with(pres, value = "slide 1", location = ph_location_type(type = "sldNum"))
+pres <- ph_with(pres, value = "We created three linear models for the Sale price Responsible variable using three different Explanatory variables", location = ph_location_type(type = "body"))
+
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Linear Regression Model 1", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = "The first model is created between Sale price as response variable and Total Ground area in Sq feet as Explonatory Variable", location = ph_location_left())
+model1_plot <- ggplot(data = ames,mapping = aes(x = Gr_Liv_Area,y = Sale_Price))+ geom_point(alpha = 0.2) + geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Living area above ground", y = "Price of house", title ="Impact of living area above ground on sales price")
+pres <- ph_with(pres, value = model1_plot, location = ph_location_right())
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Linear Regression Model 1 (contd.)", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("The value of correlation for the two variables was found to be 0.706 which seems to be very strong.","Fitting a regression Model we got the following equation mentioned below."), location = ph_location_type(type = "body"))
+img1 <- file.path(R.home("doc"),"html","model1eq.jpg")
+pres <- ph_with(pres, value = external_img(img1), location = ph_location_type("body"))
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Linear Regression Model 1 (contd.)", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("Having an intercept of 13289.6 means that for homes with 0 square feet living area above ground or in other terms with no living area above ground at all, the price of such houses would be $13298.6","Deciphering the slope, it means that with every square feet increase in the living area above ground, we would expect the price of the house to increase by $111.7 on an average."), location = ph_location_type(type = "body"))
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Linear Regression Model 2", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = "The second model is created between Sale price as response variable and Total  First FloorLiving area in Sq feet as Explonatory Variable", location = ph_location_left())
+model2_plot <-ggplot(data = ames,mapping = aes(x = First_Flr_SF,y = Sale_Price))+ geom_point(alpha = 0.2) + geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "First floor square feet", y = "Price of house", title ="Impact of First floor square feet on sales price")
+pres <- ph_with(pres, value = model2_plot, location = ph_location_right())
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Linear Regression Model 2 (contd.)", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("The value of correlation for the two variables was found to be 0.621 which seems to be very strong.","Fitting a regression Model we got the following equation mentioned below."), location = ph_location_type(type = "body"))
+img2 <- file.path(R.home("doc"),"html","model2eq.jpg")
+pres <- ph_with(pres, value = external_img(img2), location = ph_location_type("body"))
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Linear Regression Model 2 (contd.)", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("Having an intercept of 33847.3 means that for the houses with 0 square feet first floor, the price of such houses would be $33847.3","Deciphering the slope, it means that with every square feet increases for the first floor, we would expect the price of the house to increase by $126.7 on an average."), location = ph_location_type(type = "body"))
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Linear Regression Model 3", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = "The Third model is created between Sale price as response variable and Total Basement area in Sq feet as Explonatory Variable", location = ph_location_left())
+model3_plot<- ggplot(data = ames,mapping = aes(x = Total_Bsmt_SF,y = Sale_Price))+ geom_point(alpha = 0.2) + geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Total Basement Square Feet", y = " sales Price of house", title ="Impact of Basement Square Feet on sales price")
+model3_plot
+pres <- ph_with(pres, value = model3_plot, location = ph_location_right())
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Linear Regression Model 3 (contd.)", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("The value of correlation for the two variables was found to be 0.63 which seems to be very strong.","Fitting a regression Model we got the following equation mentioned below."), location = ph_location_type(type = "body"))
+img3 <- file.path(R.home("doc"),"html","model3eq.jpg")
+pres <- ph_with(pres, value = external_img(img3), location = ph_location_type("body"))
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Linear Regression Model 3 (contd.)", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("*Having an intercept of 60332.4 means that for homes with 0 square feet basement area above ground or in other terms with no basement area  at all, the price of such houses would be $60332.4","Deciphering the slope, it means that with every square feet increase in the Total basement  area , we would expect the price of the house to increase by $114.6 on an average."), location = ph_location_type(type = "body"))
+# Step 3 ends
+
+
+
+
+# Slide 6 Step 4 Model Assessment
+pres <- add_slide(pres,
+                  layout = "Title and Content",
+                  master = "Office Theme")
+pres <- ph_with(pres,
+                value = "Step - 4 : Model Assessment",
+                location = ph_location_type(type = "title"))
+
+properties4 <- fp_text(color = "black", font.size = 20, bold = FALSE)
+
+
+slide_body4 <- ftext(paste0("Assessing the model based on the R squared metric: The outliers are being verified using a boxplot. All the points represented beyond the upper whisker prove that those are the ouliers.All these points represent the properties for which sales rate is exceptionally high in comparison to the rest of the houses.
+Considering the 3rd quartile + 1.5 * IQR rule, all the points beyond $339500 are the outliers in our data."), properties4)
+
+pres <- ph_with(pres, value = fpar(slide_body4),
+                 location = ph_location_left())
+
+Model_Summary_img <- file.path(R.home("doc"),"html","Model_Summary.PNG")
+pres <- ph_with(pres, value = external_img(Model_Summary_img), location = ph_location_right())
+
+
+# Slide 7 Step 4 Model Assessment: Interpretation
+
+pres <- add_slide(pres,
+                  layout = "Title and Content",
+                  master = "Office Theme")
+pres <- ph_with(pres,
+                value = "Model Assessment: Interpretation",
+                location = ph_location_type(type = "title"))
+
+
+properties5 <- fp_text(color = "black", font.size = 16, bold = FALSE)
+
+slide_body5 <- ftext(paste0("The above table draws a comparison among all of our three linear models plotted above. The measure for comparing the strength of fit of these models is R-squared.
+To recapitulate, our response variable is sales price for all three of them with a different explanatory variable everytime.
+Apparently, For the first model where the explanatory variable is the living area above the ground, the fitted linear regression model could explain the 50 % of the variability of the response variable which is the Sale price of the house. 50% on a scale of 0-100% is moderately good and it makes sense as in a real world a house price never just depends upon one single factor.The rest of the 50% variability not explained by the model can be attributed to the same, also the inherent randomness present in data contributes to it.
+The second model has a R squared value of about 0.386 which means that only 38.6 % of variablity could be explained by the fitted model.
+Finally for the third model which has a R squared value of 0.40, the fitted model could only explain the 40% of variability due to the explanatory variable we chose. The numbers are comparable for the second and the third one.
+Hence based upon the points made above, we can consider the model 1 to be best fit for our response variable among the three chosen.
+So in our further analysis which will be the Model diagnostics, will be based for only Model where the explanatory variable is Living Area above ground."), properties5)
+
+pres <- ph_with(pres, value = fpar(slide_body5),
+                 location = ph_location_type(type = "body"))
+# Step 4 ends
+
+
+# Step 5 Model Diagnostics 
+
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Model Diagnostics", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("Now that we have chosen the best fit model out of the three linear regression models. We are going to assess whether our model is reliable or not by checking our model for :- 1) Linearity  2) Nearly Normal Residuals 3) Constant Variability"), location = ph_location_type(type = "body"))
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Linearity", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("Observing Linearity from Scatter Plot"), location = ph_location_left())
+modeld1 <- ggplot(data = ames,mapping = aes(x = Gr_Liv_Area,y = Sale_Price))+ geom_point(alpha = 0.2) + geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Living area above ground", y = "Price of house", title ="Impact of living area above ground on sales price")
+pres <- ph_with(pres, value = modeld1,  location = ph_location_right())
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Linearity (contd.)", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("We need to plot a scatter plot for the fitted values by our model and the residuals in order to check the whether our model is fulfilling the condition of Linearity."), location = ph_location_left())
+modeld11 <-ggplot(data = m1_aug, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  xlab("Fitted values") +
+  ylab("Residuals")  + labs(title = "Scatter plot to check Linearity")
+pres <- ph_with(pres, value = modeld11,  location = ph_location_right())
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Linearity (contd.)", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("Based on the above graph we can see that the residuals are distributed equally not for all observation but only for those between  sale price 0 to 300000  and then we can also see some outliers on the far right side but since their count is small we can ignore them.","The model was proved to be linear from the scatter plot plotted in the Modelling part as well, where it was pretty evident."), location = ph_location_type(type = "body"))
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Nearly Normal Residuals", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("For checking this condition we can plot a histogram for  the residuals values."), location = ph_location_left())
+modeld2 <- ggplot(data = m1_aug, aes(x = .resid)) +
+  geom_histogram(color ='black', fill = 'brown') +
+  xlab("Residuals") +labs(title = "Histogram plot for residuals ")
+pres <- ph_with(pres, value = modeld2,  location = ph_location_right())
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Nearly Normal Residuals (contd.)", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("Observing the above Histogram graph, we can see that the shape of the distribution of our residuals is symmetrical, just like the normal distribution shape but only the peak is at a higher value.Also we can see that there are outliers on both sides.The distribution of course can't be perfectly normal as that is an hypothetical idea. So we can conclude that our model is fulfilling the condition of Nearly Normal Distribution."), location = ph_location_type(type = "body"))
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Constant Variability", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("Finally we are going to check the condition of Constant variability for our Model"), location = ph_location_left())
+modeld3<- ggplot(data = m1_aug, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  xlab("Fitted values") +
+  ylab("Residuals")  + labs(title = "Plot to check variability")
+pres <- ph_with(pres, value = modeld3,  location = ph_location_right())
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Constant Variability (contd.)", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("Having a glance at the plot above, it can be inferred that the variation of points around the least square line is not constant. The points seem to be very compact around our red line in the beginning up to 100000, after that the variation widens up till 400000. Beyond that the points are way scattered away from our line in consideration."), location = ph_location_type(type = "body"))
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Constant Variability (contd.)", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("We don't expect the variation to be perfectly constant but it has to be roughly constant, which however is not the case for our model.","So, the third condition is not satisfied by our model."), location = ph_location_type(type = "body"))
+# Step 5 ends
+
+
+# Step 6:Data Transformation and Re-fitting the Best Model
+
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Data transformation And Refitting ", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("We are going to transform our Response variable which is the Sale price of the house using the mathematical Log to the base 10. We can even take the squared values but since our sale price values are already in values of thousands it would make them into millions if we take the squared values. Hence we are going to take the logarithmic values for sale price."), location = ph_location_type(type = "body"))
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Data transformation And Refitting (contd.) ", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("Intercept of the best fit line for  logarithmic sales price as a response variable and Living Area above ground as an explanatory variable is 4.8552133","The slope for our linear regression model is 0.0002437","The strength of the fit of the linear model is 0.484 on a scale of 0 to 1, or in other words, 48.4% of the variability in Sales Price is explained by this specific model."), location = ph_location_type(type = "body"))
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Interpretting the Equation ", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("Having an intercept of 4.8552133 means that for homes with 0 square feet Living Area above ground, the price of such houses would be 4.8552133 on a logarithmic scale.","Deciphering the slope, it means that with every square feet increase in the Living Area above ground, we would expect the price of the house to increase by 0.0002722 on an average on a logarithmic scale."), location = ph_location_type(type = "body"))
+
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Model Diagnostics for Refitted Line ", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("Once again  We are going to assess whether our model is reliable or not by checking our model for :- 1) Linearity  2) Nearly Normal Residuals 3) Constant Variability"), location = ph_location_type(type = "body"))
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Linearity ", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("Checking for Linearity using the Scatter Plot."), location = ph_location_left())
+modelbfd1<- ggplot(data = ames,mapping = aes(x = Gr_Liv_Area,y = log10(Sale_Price)))+ geom_point(alpha = 0.2) + geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Living Area Above Ground", y = "logarithmic sales Price of house", title ="Checking linearity for living area above ground(Square Feet) on logarithmic sales price")
+pres <- ph_with(pres, value = modelbfd1,location = ph_location_right())
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Linearity (contd.) ", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("Having a cursory glance at the plot, the linear relationship between transformed sales price and living area above ground is apparent. The blue line fitting the model depicts the overall linearity present in the model. So, first condition is satisfied. "), location = ph_location_type(type = "body"))
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Nearly Normal residuals ", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("Checking for Linearity using the Histogram plot of residuals which is provided in the Rmd file we can conclude that the Model is following our assumption of nearly Normal residuals.","In order to check how normally distributed are the residuals for the model where we have transformed the response variable. Quite visibly, the distribution of residuals seem to be nearly symmetric."), location = ph_location_type(type = "body"))
+pres <- add_slide(pres, layout = "Title and Content", master = "Office Theme")
+layout_properties ( x = pres, layout = "Title and Content" )
+pres <- ph_with(pres, value = "Constant variability ", location = ph_location_type(type = "title"))
+pres <- ph_with(pres, value = c("Referencing to the scatter plot plotted for checking linearity,for checking the the constant variability, it is quite evident that the variation of the points around the least squares line is roughly constant. Overall, the residuals are spread equally along the range of predictors and it satisfies the condition we were looking for."), location = ph_location_type(type = "body"))
+
+print(pres, target = "DAB-501_Final_Project_DataProduct.pptx")
+```
+
